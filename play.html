@@ -86,8 +86,21 @@ function showQuestions() {
 function startAd(qid) {
     if (checkGlobalLock()) return;
     
-    alert('🎬 Ad Dekho Abhi! Monetag ka ad yaha lagega');
-    // Yaha Monetag ka code aayega: show_xxx().then(() => openQuiz(qid))
+    function startAd(qid) {
+    if (checkGlobalLock()) return;
+    
+    document.getElementById('questionList').innerHTML = 'Ad Load Ho Raha...';
+    
+    show_11059500().then(() => {
+        let coins = parseInt(localStorage.getItem('sfa_coins')) || 0;
+        localStorage.setItem('sfa_coins', coins + 5);
+        document.getElementById('coins').innerText = coins + 5;
+        openQuiz(qid);
+    }).catch(() => {
+        alert('Ad nahi chala. Bina ad ke quiz khol rahe hai');
+        openQuiz(qid);
+    })
+    }
     
     // Abhi ke liye direct khol rahe
     openQuiz(qid);

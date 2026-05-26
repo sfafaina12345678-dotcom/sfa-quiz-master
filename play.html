@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Zone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='//libtl.com/sdk.js' data-zone='11059500' data-sdk='show_11059500'></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 10px; background: #f5f5f5; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .coins { font-weight: bold; color: green; font-size: 18px; }
+        .q-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .q-btn.locked { background: #aaa; cursor: not-allowed; }
+        .option { display: block; width: 100%; padding: 12px; margin: 8px 0; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        #quizBox { display: none; }
+        #lockMsg { color: red; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Quiz Zone</h2>
+        <div class="coins">💰 Coins: <span id="coins">0</span></div>
+    </div>
+    
+    <div id="lockMsg"></div>
+    <button onclick="window.location.href='index.html'" style="margin-bottom:15px;">⬅ Back</button>
+    
+    <div id="questionList"></div>
+    
+    <div id="quizBox">
+        <h3 id="qtext"></h3>
+        <div id="options"></div>
+    </div>
+
+<script>
+// Local Storage Helper
+function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function loadData(key) { return JSON.parse(localStorage.getItem(key)) || null; }
+
+// Check 5 min global lock
+function checkGlobalLock() {
+    let lockTill = loadData('global_lock');
+    if (lockTill && lockTill > Date.now()) {
+        let sec = Math.ceil((lockTill - Date.now())/1000);
+        document.getElementById('lockMsg').innerText = `⏳ Wait ${sec}s for next question`;
+        return true;
+    }
+    document.getElementById('lockMsg').innerText = '';
+    return false;
+}
+
+// Questions Data
+let questions = [
+  {id: 1, q: "Bharat ki rajdhani kya hai?", options: ["Mumbai", "Delhi", "Kolkata", "Chennai"], ans: 1},
+  {id: 2, q: "2 + 2 = ?", options: ["3", "4", "5", "6"], ans: 1},
+  {id: 3, q: "Sun kaha se nikalta hai?", options: ["West", "East", "North", "South"], ans: 1},
+  {id: 4, q: "HTML ka full form?", options: ["Hyper Text Markup", "High Tech Machine", "Home Tool", "None"], ans: 0},
+  {id: 5, q: "1 KM me kitne meter hote hai?", options: ["10", "100", "1000", "10000"], ans: 2}
+];
+
+// Show question buttons
+function showQuestions() {
+    let html = '';
+    let qLocks = loadData('question_locks') || {};
+    
+    questions.forEach(q => {
+        let unlockTime = qLocks[q.id];
+        let isLocked = unlockTime && Date.now() < unlockTime;
+        let timeLeft = isLocked ? Math.ceil((unlockTime - Date.now())/1000/3600) : 0;
+        
+        if (isLocked) {
+            html += `<button class="q-btn locked">Q${q.id} 🔒 Locked ${timeLeft}h left</button>`;
+        } else {
+            html += `<button class="q-btn" onclick="startAd(${q.id})">Q${q.id} Watch Ad to Play</button>`;
+        }
+    });
+    document.getElementById('questionList').innerHTML = html;
+}
+
+// Ad sirf quiz unlock karega - COINS NAHI DEGA
+function startAd(qid) {
+    if (checkGlobalLock()) return;
+    
+    document.getElementById('questionList').innerHTML = '<h3>Ad Load Ho Raha... ⏳</h3>';
+    
+    show_11059500().then(() => {
+        // Ad dekhne pe koi coin nahi
+        openQuiz(qid);
+    }).catch(() => {
+        alert('Quiz khelne ke liye ads dekhna zaroori hai!');
+        showQuestions();
+    })
+}
+
+let currentQ = null;
+function openQuiz(qid) {
+    currentQ = questions.find(x => x.id == qid);
+    document.getElementById('questionList').style.display = 'none';
+    document.getElementById('quizBox').style.display = 'block';
+    document.getElementById('qtext').innerText = currentQ.q;
+    
+    let optHtml = '';
+    currentQ.options.forEach((o, i) => {
+        optHtml += `<button class="option" onclick="checkAns(${i})">${o}</button>`;
+    });
+    document.getElementById('options').innerHTML = optHtml;
+}
+
+// Sirf answer dene pe +10 coins - Sahi ya Galat
+function checkAns(selected) {
+    let coins = parseInt(localStorage.getItem('sfa_coins')) || 0;
+    coins += 10; // ← Sirf yaha coins milenge
+    localStorage.setItem('sfa_coins', coins);
+    document.getElementById('coins').innerText = coins;
+    
+    if (selected === currentQ.ans) {
+        alert('✅ Sahi Jawab! +10 Coins Mile');
+    } else {
+        alert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
+    }
+    
+    // 5 min ka global lock laga do
+    saveData('global_lock', Date.now() + 5*60*1000);
+    
+    // Is question ko 22 ghante ke liye lock kar do
+    let qLocks = loadData('question_locks') || {};
+    qLocks[currentQ.id] = Date.now() + 22*60*60*1000;
+    saveData('question_locks', qLocks);
+    
+    // Wapas question list pe
+    document.getElementById('quizBox').style.display = 'none';
+    document.getElementById('questionList').style.display = 'block';
+    showQuestions();
+}
+
+// Load coins on start
+document.getElementById('coins').innerText = parseInt(localStorage.getItem('sfa_coins')) || 0;
+
+setInterval(checkGlobalLock, 1000);
+showQuestions();
+</script>
+</body>
+</html>

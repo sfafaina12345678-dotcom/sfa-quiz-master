@@ -76,7 +76,7 @@ function showQuestions() {
         if (isLocked) {
             html += `<button class="q-btn locked">Q${q.id} 🔒 Locked ${timeLeft}h left</button>`;
         } else {
-            html += `<button class="q-btn" onclick="startAd(${q.id})">Q${q.id} ▶️ Watch Ad & Play</button>`;
+            html += `<button class="q-btn" onclick="startAd(${q.id})">Q${q.id} Watch Ad & Play</button>`;
         }
     });
     document.getElementById('questionList').innerHTML = html;

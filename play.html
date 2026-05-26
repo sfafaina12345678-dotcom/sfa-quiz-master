@@ -81,9 +81,15 @@ function startAd(qid) {
     if (checkGlobalLock()) return;
     
     document.getElementById('questionList').innerHTML = '<h3>Ad Load Ho Raha... ⏳</h3>';
+
     
-    show_11059500().then(() => {
-        // Ad dekhne pe koi coin nahi
+
+// Rewarded Popup
+
+show_11059500('pop').then(() => {
+    // user watch ad till the end or close it in interstitial format
+    // your code to reward user for rewarded format
+
         openQuiz(qid);
     }).catch(() => {
         alert('Quiz khelne ke liye ads dekhna zaroori hai!');

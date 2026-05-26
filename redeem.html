@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redeem Coins</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial; background:#1a1a2e; color:white; text-align:center; padding:20px; }
+        .box { background:#16213e; padding:20px; border-radius:15px; margin:20px 0; }
+        .btn { padding:15px 30px; font-size:20px; border:none; border-radius:10px; 
+               background:#28a745; color:white; cursor:pointer; margin:10px; }
+        .back { background:#6c757d; }
+    </style>
+</head>
+<body>
+    <h1>💰 Redeem Coins</h1>
+    
+    <div class="box">
+        <h2>Your Wallet</h2>
+        <div style="font-size:40px;">💰 <span id="coinCount">0</span></div>
+        <p style="margin-top:20px; font-size:18px;">5000 Coins = ₹10 Redeem Code</p>
+    </div>
+    
+    <button class="btn" onclick="redeemCoins()">Redeem 5000 Coins</button>
+    <button class="btn back" onclick="location.href='index.html'">⬅️ Back</button>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+    
+    let coins = parseInt(localStorage.getItem('sfa_coins') || 0);
+    document.getElementById('coinCount').innerText = coins;
+    
+    function redeemCoins() {
+        if (coins < 5000) {
+            alert('❌ Minimum 5000 coins chahiye!\nAbhi: ' + coins + ' coins');
+            return;
+        }
+        coins -= 5000;
+        localStorage.setItem('sfa_coins', coins);
+        document.getElementById('coinCount').innerText = coins;
+        alert('✅ Redeem Request Sent!\n24 ghante me code milega.');
+        tg.sendData('REDEEM:5000');
+    }
+</script>
+</body>
+</html>

@@ -71,7 +71,24 @@ let questions = [
     {id: 19, q: "Python kya hai?", options: ["Snake", "Language", "Game", "App"], ans: 1},
     {id: 20, q: "Earth ke kitne moon?", options: ["0", "1", "2", "3"], ans: 1}
 ];
-
+function canShowInterstitial() {
+    let today = new Date().toDateString();
+    let adData = JSON.parse(localStorage.getItem('interstitialAd') || '{}');
+    
+    if (adData.date !== today) {
+        adData = { date: today, count: 0, lastAd: 0 };
+    }
+    
+    let timeSinceLastAd = Date.now() - adData.lastAd;
+    
+    if (adData.count < 5 && timeSinceLastAd > 300000) {
+        adData.count++;
+        adData.lastAd = Date.now();
+        localStorage.setItem('interstitialAd', JSON.stringify(adData));
+        return true; 
+    }
+    return false;
+            }
 // Show question buttons
 function showQuestions() {
     let html = '';

@@ -91,26 +91,6 @@ function showQuestions() {
     document.getElementById('questionList').innerHTML = html;
 }
 
-// Ad sirf quiz unlock karega - COINS NAHI DEGA
-function startAd(qid) {
-    if (checkGlobalLock()) return;
-    
-    document.getElementById('questionList').innerHTML = '<h3>Ad Load Ho Raha... ⏳</h3>';
-
-    
-
-// Rewarded Popup
-
-show_11059500('pop').then(() => {
-    // user watch ad till the end or close it in interstitial format
-    // your code to reward user for rewarded format
-
-        openQuiz(qid);
-    }).catch(() => {
-        alert('Quiz khelne ke liye ads dekhna zaroori hai!');
-        showQuestions();
-    })
-}
 
 let currentQ = null;
 function openQuiz(qid) {

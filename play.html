@@ -148,6 +148,10 @@ function checkAns(selected) {
     document.getElementById('quizBox').style.display = 'none';
     document.getElementById('questionList').style.display = 'block';
     showQuestions();
+        // ANSWER KE BAAD INTERSTITIAL AD DIKHAO
+    if (canShowInterstitial()) {
+        show_11059500();
+    }
 }
 
 // Load coins on start

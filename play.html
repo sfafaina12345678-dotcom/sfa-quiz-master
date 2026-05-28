@@ -59,24 +59,7 @@ let questions = [
     {id:7, q:"Water formula?", opt:["H2O","CO2","O2","N2"], ans:0},
     {id:8, q:"National Animal?", opt:["Lion","Tiger","Elephant","Peacock"], ans:1}
 ];
-function canShowInterstitial() {
-    let today = new Date().toDateString();
-    let adData = JSON.parse(localStorage.getItem('interstitialAd') || '{}');
-    
-    if (adData.date !== today) {
-        adData = { date: today, count: 0, lastAd: 0 };
-    }
-    
-    let timeSinceLastAd = Date.now() - adData.lastAd;
-    
-    if (adData.count < 5 && timeSinceLastAd > 300000) {
-        adData.count++;
-        adData.lastAd = Date.now();
-        localStorage.setItem('interstitialAd', JSON.stringify(adData));
-        return true; 
-    }
-    return false;
-            }
+
 // Show question buttons
 function showQuestions() {
     let html = '';

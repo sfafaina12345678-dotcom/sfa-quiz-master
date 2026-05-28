@@ -1,35 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz</title>
   <script src='//libtl.com/sdk/v1.js' data-zone='11059500' async></script>
+  <title>Play Quiz</title>
   <style>
-    /* Tera purana CSS yahan rahega */
+    body { font-family: Arial; background:#1a1a2e; color:white; padding:15px; }
+    .q-btn { display:block; width:100%; margin:10px 0; padding:15px; font-size:18px; border:none; border-radius:8px; background:#0f3460; color:white; }
+    .locked { background:#444; opacity:0.6; }
+    .quiz-box { background:#16213e; padding:20px; border-radius:15px; display:none; }
+    .option { display:block; width:100%; margin:8px 0; padding:12px; border:none; border-radius:8px; background:#0f3460; color:white; font-size:16px; }
+    .timer { color:orange; font-weight:bold; }
   </style>
 </head>
 <body>
+  <h2>🎯 Quiz Zone <span style="float:right">💰 <span id="coins">0</span></span></h2>
+  <div id="lockMsg" class="timer"></div>
+
   <div id="questionList"></div>
-  <div id="quizBox" style="display:none;">
-    <h2 id="qtext"></h2>
+
+  <div id="quizBox" class="quiz-box">
+    <h3 id="qText"></h3>
     <div id="options"></div>
-    <div id="coins">Coins: 0</div>
   </div>
 
+  <button onclick="location.href='index.html'" style="margin-top:20px; padding:10px">⬅️ Back</button>
+
   <script>
-  let questions = [
-    {id: 1, q: "Bharat ki rajdhani kya hai?", options: ["Mumbai", "Delhi", "Kolkata", "Chennai"], ans: 1},
-    {id: 2, q: "2+2=?", options: ["3", "4", "5", "6"], ans: 1},
-    {id: 3, q: "Sun kaha se nikalta hai?", options: ["West", "East", "North", "South"], ans: 1},
-    {id: 4, q: "HTML ka full form?", options: ["Hyper Text Markup", "High Tech Machine", "Home Tool", "None"], ans: 0},
-    {id: 5, q: "1 KM me kitne meter hote hai?", options: ["10", "100", "1000", "10000"], ans: 2},
-    {id: 6, q: "Largest Planet?", opt:["Earth","Mars","Jupiter","Venus"], ans:2},
-    {id: 7, q: "Water formula?", opt:["H2O","O2","CO2","NaCl"], ans:0},
-    {id: 8, q: "National Animal?", opt:["Lion","Tiger","Elephant","Peacock"], ans:1}
+  let tg = window.Telegram.WebApp;
+  tg.expand();
+
+  let coins = parseInt(localStorage.getItem('sfa_coins')) || 0;
+  document.getElementById('coins').innerText = coins;
+
+  // 8 Questions
+  const questions = [
+    {id:1, q:"India ki Rajdhani?", options:["Mumbai","Delhi","Kolkata","Chennai"], ans:1},
+    {id:2, q:"2+2=?", options:["3","4","5","6"], ans:1},
+    {id:3, q:"Sun rises from", options:["West","East","North","South"], ans:1},
+    {id:4, q:"Taj Mahal kaha hai?", options:["Delhi","Agra","Jaipur","Mumbai"], ans:1},
+    {id:5, q:"PM of India 2024?", options:["Rahul","Modi","Kejriwal","Yogi"], ans:1},
+    {id:6, q:"Largest Planet?", options:["Earth","Mars","Jupiter","Venus"], ans:2},
+    {id:7, q:"Water formula?", options:["H2O","O2","CO2","NaCl"], ans:0},
+    {id:8, q:"National Animal?", options:["Lion","Tiger","Elephant","Peacock"], ans:1}
   ];
 
-  // Show question buttons
+  function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  function loadData(key) { return JSON.parse(localStorage.getItem(key)) || null; }
+
+  // Check 5 min global lock
+  function checkGlobalLock() {
+    let lockTill = loadData('global_lock');
+    if (lockTill && Date.now() < lockTill) {
+      let sec = Math.ceil((lockTill - Date.now())/1000);
+      document.getElementById('lockMsg').innerText = `⏳ Wait ${sec}s for next question`;
+      return true;
+    }
+    document.getElementById('lockMsg').innerText = '';
+    return false;
+  }
+
+  // Show 8 question buttons
   function showQuestions() {
     let html = '';
     let qLocks = loadData('question_locks') || {};
@@ -40,28 +72,32 @@
       let timeLeft = isLocked ? Math.ceil((unlockTime - Date.now())/1000/3600) : 0;
 
       if (isLocked) {
-        html += `<button class="q-btn locked" id="q${q.id}"> 🔒 Locked ${timeLeft}h left</button>`;
+        html += `<button class="q-btn locked" id="q${q.id}">🔒 Locked ${timeLeft}h left</button>`;
       } else {
-        html += `<button class="q-btn" onclick="openQuiz('${q.id}')">${q.id}. ${q.q}</button>`;
+        html += `<button class="q-btn" onclick="openQuiz('${q.id}')">Q${q.id} Watch Ad & Play</button>`;
       }
     });
     document.getElementById('questionList').innerHTML = html;
   }
 
+  // Ad dekhne ke baad quiz khule
   let currentQ = null;
   function openQuiz(qid) {
+    if (checkGlobalLock()) return;
     if (typeof show_11059500 === 'undefined') {
       alert('Ad load nahi ho raha. Page refresh karo ya adblock band karo.');
       showQuestions();
       return;
     }
+    
     document.getElementById('questionList').innerHTML = '<h3 style="text-align:center;color:#4CAF50;">Ad Load Ho Raha Hai... Please Wait</h3>';
+    
     show_11059500().then(() => {
       // Ad complete hone ke baad hi quiz khulega
       currentQ = questions.find(x => x.id == qid);
       document.getElementById('questionList').style.display = 'none';
       document.getElementById('quizBox').style.display = 'block';
-      document.getElementById('qtext').innerText = currentQ.q;
+      document.getElementById('qText').innerText = currentQ.q;
 
       let optHtml = '';
       currentQ.options.forEach((o, i) => {
@@ -75,10 +111,9 @@
     });
   }
 
-  // Sirf answer dene pe +10 coins - Sahi ya Galat
   function checkAns(selected) {
     let coins = parseInt(localStorage.getItem('sfa_coins')) || 0;
-    coins += 10; // Sirf yaha coins milenge
+    coins += 10;
     localStorage.setItem('sfa_coins', coins);
     document.getElementById('coins').innerText = coins;
 
@@ -100,20 +135,6 @@
     document.getElementById('quizBox').style.display = 'none';
     document.getElementById('questionList').style.display = 'block';
     showQuestions();
-    // showResultAndContinue(isCorrect);
-  }
-
-  // Load coins on start
-  document.getElementById('coins').innerText = parseInt(localStorage.getItem('sfa_coins')) || 0;
-
-  function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
-  function loadData(key) { return JSON.parse(localStorage.getItem(key)); }
-
-  function checkGlobalLock() {
-    let lock = loadData('global_lock');
-    if (lock && lock > Date.now()) {
-      // Lock active hai
-    }
   }
 
   setInterval(checkGlobalLock, 1000);

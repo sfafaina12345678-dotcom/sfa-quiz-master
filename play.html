@@ -136,15 +136,7 @@ function checkAns(selected) {
     document.getElementById('quizBox').style.display = 'none';
     document.getElementById('questionList').style.display = 'block';
     showQuestions();
-        // ANSWER KE BAAD INTERSTITIAL AD DIKHAO
-    if (canShowInterstitial()) {
-
-// ✅ Naya - Monetag ko force karo
-show_11059500('interstitial').then(() => {
     showResultAndContinue(isCorrect);
-}).catch(() => {
-    showResultAndContinue(isCorrect);
-});
     }
 }
 

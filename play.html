@@ -82,7 +82,7 @@ function showQuestions() {
 
 let currentQ = null;
     function openQuiz(qid) {
-      // Ad dikhao pehle
+        document.getElementById('questionList').innerHTML = '<h3 style="text-align:center;color:#4CAF50;">Ad Load Ho Raha Hai... Please Wait</h3>';
       show_11059500().then(() => {
         // Ad complete hone ke baad hi quiz khulega
        currentQ = questions.find(x => x.id == qid);

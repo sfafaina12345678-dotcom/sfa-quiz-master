@@ -81,18 +81,25 @@ function showQuestions() {
 
 
 let currentQ = null;
-function openQuiz(qid) {
-    currentQ = questions.find(x => x.id == qid);
-    document.getElementById('questionList').style.display = 'none';
-    document.getElementById('quizBox').style.display = 'block';
-    document.getElementById('qtext').innerText = currentQ.q;
-    
-    let optHtml = '';
-    currentQ.options.forEach((o, i) => {
-        optHtml += `<button class="option" onclick="checkAns(${i})">${o}</button>`;
-    });
-    document.getElementById('options').innerHTML = optHtml;
-}
+    function openQuiz(qid) {
+      // Ad dikhao pehle
+      show_11059500().then(() => {
+        // Ad complete hone ke baad hi quiz khulega
+       currentQ = questions.find(x => x.id == qid);
+        document.getElementById('questionList').style.display = 'none';
+        document.getElementById('quizBox').style.display = 'block';
+        document.getElementById('qtext').innerText = currentQ.q;
+  
+        let optHtml = '';
+         currentQ.options.forEach((o, i) => {
+          optHtml += `<button class="option" onclick="checkAns(${i})">${o}</button>`;
+        });
+       document.getElementById('options').innerHTML = optHtml;
+      }).catch(() => {
+        // User ne ad skip kar diya ya load nahi hua
+        alert('Quiz unlock karne ke liye ad dekhna zaroori hai!');
+   });
+ }
 
 // Sirf answer dene pe +10 coins - Sahi ya Galat
 function checkAns(selected) {

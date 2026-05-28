@@ -28,8 +28,8 @@
   <button onclick="location.href='index.html'" style="margin-top:20px; padding:10px">⬅️ Back</button>
 
   <script>
-  let tg = window.Telegram.WebApp;
-  tg.expand();
+  let tg = window.Telegram?.WebApp;
+  if (tg) tg.expand();
 
   let coins = parseInt(localStorage.getItem('sfa_coins')) || 0;
   document.getElementById('coins').innerText = coins;

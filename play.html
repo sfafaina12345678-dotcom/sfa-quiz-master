@@ -29,11 +29,11 @@
 <button onclick="location.href='index.html'" style="margin-top:20px; padding:10px;">⬅️ Back</button>
 
 <script type="module">
-  // 1. Firebase Imports - NAYA
+  // Firebase Imports
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-  // 2. Firebase Config - NAYA
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyALgsT0Hma3XzOra4egA0hHU9HEToRSg",
     authDomain: "quiz-master-bddda.firebaseapp.com",
@@ -48,15 +48,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 3. Telegram + Global Vars - NAYA
+  // Telegram
   let tg = window.Telegram.WebApp;
   if (tg) tg.expand();
   
+  // Global Vars
   let userRef = null;
   let userCoins = 0;
   let currentQ = null;
 
-  // 4. 8 Questions - TERA PURANA CODE
+  // 8 Questions
   const questions = [
     {id:1, q:"India ki Rajdhani?", options:["Mumbai","Delhi","Kolkata","Chennai"], ans:1},
     {id:2, q:"2+2=?", options:["3","4","5","6"], ans:1},
@@ -68,11 +69,11 @@
     {id:8, q:"National Animal?", options:["Lion","Tiger","Elephant","Peacock"], ans:1}
   ];
 
-  // 5. LocalStorage ab sirf locks ke liye - TERA PURANA CODE
+  // LocalStorage sirf locks ke liye
   function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
   function loadData(key) { return JSON.parse(localStorage.getItem(key)) || null; }
 
-  // 6. Check 5 min global lock - TERA PURANA CODE
+  // Check 5 min global lock
   function checkGlobalLock() {
     let lockTill = loadData('global_lock');
     if (lockTill && Date.now() < lockTill) {
@@ -84,7 +85,7 @@
     return false;
   }
 
-  // 7. Show 8 question buttons - TERA PURANA CODE
+  // Show 8 question buttons
   function showQuestions() {
     let html = '';
     let qLocks = loadData('question_locks') || {};
@@ -103,7 +104,7 @@
     document.getElementById('questionList').innerHTML = html;
   }
 
-  // 8. Ad dekhne ke baad quiz khule - TERA PURANA CODE
+  // Ad dekhne ke baad quiz khule
   window.openQuiz = function(qid) {
     if (checkGlobalLock()) return;
     if (typeof show_11059500 === 'undefined') {
@@ -115,7 +116,6 @@
     document.getElementById('questionList').innerHTML = '<h3 style="text-align:center;color:#4CAF50;">Ad Load Ho Raha Hai...</h3>';
     
     show_11059500().then(() => {
-      // Ad complete hone ke baad hi quiz khulega
       currentQ = questions.find(x => x.id === qid);
       document.getElementById('questionList').style.display = 'none';
       document.getElementById('quizBox').style.display = 'block';
@@ -132,11 +132,11 @@
     });
   }
 
-  // 9. Answer Check - FIRESTORE WALA CHANGE
+  // Answer Check - FIRESTORE WALA CHANGE YAHI HAI
   window.checkAns = async function(selected) {
     userCoins += 10;
     
-    // Firebase me update karo - NAYA
+    // Firebase me update karo
     await updateDoc(userRef, { coins: userCoins });
     document.getElementById('coins').innerText = userCoins;
 
@@ -146,21 +146,21 @@
       alert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
     }
 
-    // 5 min ka global lock laga do - TERA PURANA CODE
+    // 5 min ka global lock laga do
     saveData('global_lock', Date.now() + 5*60*1000);
     
-    // Is question ko 22 ghante ke liye lock kar do - TERA PURANA CODE
+    // Is question ko 22 ghante ke liye lock kar do
     let qLocks = loadData('question_locks') || {};
     qLocks[currentQ.id] = Date.now() + 22*60*60*1000;
     saveData('question_locks', qLocks);
     
-    // Wapas question list pe - TERA PURANA CODE
+    // Wapas question list pe
     document.getElementById('quizBox').style.display = 'none';
     document.getElementById('questionList').style.display = 'block';
     showQuestions();
   }
 
-  // 10. Page Load Pe User Data Firebase Se Load Karo - NAYA
+  // Init - User Load Karo Firebase Se
   async function init() {
     const user = tg.initDataUnsafe?.user;
     if (!user) {
@@ -171,17 +171,24 @@
     userRef = doc(db, "users", user.id.toString());
     const userSnap = await getDoc(userRef);
     
-    if (userSnap.exists()) {
-      userCoins = userSnap.data().coins;
-      document.getElementById('coins').innerText = userCoins;
-      showQuestions();
+    // Agar user document nahi hai to bana do
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        coins: 100,
+        first_name: user.first_name,
+        created: new Date()
+      });
+      userCoins = 100;
     } else {
-      document.body.innerHTML = "<h1>User not found. Open home page first.</h1>";
+      userCoins = userSnap.data().coins;
     }
+    
+    document.getElementById('coins').innerText = userCoins;
+    showQuestions();
   }
 
   setInterval(checkGlobalLock, 1000);
-  init(); // Start - NAYA
+  init();
 
 </script>
 </body>

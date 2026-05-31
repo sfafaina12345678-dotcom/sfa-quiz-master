@@ -21,14 +21,60 @@
     
     <button class="btn play" onclick="location.href='play.html'">🎮 PLAY</button>
     <button class="btn redeem" onclick="location.href='redeem.html'">💰 REDEEM</button>
+    <script type="module">
+  // 1. Firebase import karo
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'
+  import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'
 
-<script>
-    let tg = window.Telegram.WebApp;
+  // 2. YAHAN TERA firebaseConfig PASTE KAR - Project Settings se copy karke
+  const firebaseConfig = {
+    apiKey: "AIza...",
+    authDomain: "sfa-quiz-master.firebaseapp.com",
+    projectId: "sfa-quiz-master",
+    storageBucket: "sfa-quiz-master.appspot.com",
+    messagingSenderId: "123456",
+    appId: "1:123456:web:abcdef"
+  };
+
+  // 3. Firebase start karo
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 4. Telegram + Firebase ka asli code
+  async function loadUser() {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
     
-    // Coins load karo
-    let coins = parseInt(localStorage.getItem('sfa_coins') || 0);
-    document.getElementById('coinCount').innerText = coins;
-</script>
+    const user = tg.initDataUnsafe?.user;
+    
+    if (!user) {
+      document.getElementById('coinCount').innerText = "Open in Telegram";
+      return;
+    }
+    
+    const userId = user.id.toString(); 
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      // Naya user - Firestore me bana do
+      await setDoc(userRef, {
+        telegramId: userId,
+        firstName: user.first_name,
+        username: user.username || null,
+        coins: 100,
+        createdAt: new Date()
+      });
+      document.getElementById('coinCount').innerText = 100;
+    } else {
+      // Purana user - coins dikha do
+      const data = userSnap.data();
+      document.getElementById('coinCount').innerText = data.coins;
+    }
+  }
+
+  loadUser();
+    </script>
 </body>
 </html>

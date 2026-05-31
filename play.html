@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="//libtl.com/sdk.js" data-zone="11059500" data-sdk="show_11059500"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- YE LINE ADD KI HAI -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Play Quiz</title>
 <style>
   body { font-family: Arial; background:#1a1a2e; color:white; padding:15px; }
@@ -13,7 +13,7 @@
   .quiz-box { background:#16213e; padding:20px; border-radius:15px; display:none; }
   .option { display:block; width:100%; margin:8px 0; padding:12px; border:none; border-radius:8px; background:#0f3460; color:white; font-size:16px; cursor:pointer; }
   .timer { color:orange; font-weight:bold; text-align:center; }
-  #errorBox { color:red; text-align:center; padding:20px; font-size:16px; }
+  #errorBox { color:#ff6b6b; text-align:center; padding:20px; font-size:16px; display:none; }
 </style>
 </head>
 <body>
@@ -70,6 +70,12 @@
   function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
   function loadData(key) { return JSON.parse(localStorage.getItem(key)) || null; }
 
+  function showError(msg) {
+    document.getElementById('errorBox').innerText = msg;
+    document.getElementById('errorBox').style.display = 'block';
+    document.getElementById('questionList').innerHTML = '';
+  }
+
   function checkGlobalLock() {
     let lockTill = loadData('global_lock');
     if (lockTill && Date.now() < lockTill) {
@@ -93,7 +99,7 @@
       if (isLocked) {
         html += `<button class="q-btn locked">🔒 Locked ${timeLeft}h left</button>`;
       } else {
-        html += `<button class="q-btn" onclick="openQuiz(${q.id})">Q${q.id} Watch Ad & Play</button>`;
+        html += `<button class="q-btn" onclick="openQuiz(${q.id})">Q${q.id} - Play & Win 10 Coins</button>`;
       }
     });
     document.getElementById('questionList').innerHTML = html;
@@ -102,11 +108,11 @@
   window.openQuiz = function(qid) {
     if (checkGlobalLock()) return;
     if (typeof show_11059500 === 'undefined') {
-      alert('Ad load nahi ho raha. Page refresh karo ya adblock band karo.');
+      tg.showAlert('Ad load nahi ho raha. Page refresh karo.');
       return;
     }
     
-    document.getElementById('questionList').innerHTML = '<h3 style="text-align:center;color:#4CAF50;">Ad Load Ho Raha Hai...</h3>';
+    document.getElementById('questionList').innerHTML = '<h3 style="text-align:center;color:#4CAF50;">Loading Ad...</h3>';
     
     show_11059500().then(() => {
       currentQ = questions.find(x => x.id === qid);
@@ -120,7 +126,7 @@
       });
       document.getElementById('options').innerHTML = optHtml;
     }).catch(() => {
-      alert('Quiz unlock karne ke liye ad dekhna zaroori hai!');
+      tg.showAlert('Quiz unlock karne ke liye ad dekhna zaroori hai!');
       showQuestions();
     });
   }
@@ -132,9 +138,9 @@
       document.getElementById('coins').innerText = userCoins;
 
       if (selected === currentQ.ans) {
-        alert('✅ Sahi Jawab! +10 Coins Mile');
+        tg.showAlert('✅ Sahi Jawab! +10 Coins Mile');
       } else {
-        alert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
+        tg.showAlert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
       }
 
       saveData('global_lock', Date.now() + 5*60*1000);
@@ -146,15 +152,14 @@
       document.getElementById('questionList').style.display = 'block';
       showQuestions();
     } catch (err) {
-      alert('Error: ' + err.message);
+      tg.showAlert('Error: Please try again');
     }
   }
 
   async function init() {
     const user = tg.initDataUnsafe?.user;
     if (!user) {
-      document.getElementById('errorBox').innerHTML = "❌ Bot se open karo. Browser me nahi chalega.";
-      document.getElementById('questionList').innerHTML = '';
+      showError('Please open this app from Telegram');
       return;
     }
     
@@ -163,8 +168,7 @@
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        document.getElementById('errorBox').innerHTML = "❌ User nahi mila.<br>Pehle Home Page / Start button dabao.";
-        document.getElementById('questionList').innerHTML = '';
+        showError('Please start from Home Page first');
         return;
       }
       
@@ -173,8 +177,7 @@
       showQuestions();
       
     } catch (err) {
-      document.getElementById('errorBox').innerHTML = 'Firebase Error: ' + err.message;
-      document.getElementById('questionList').innerHTML = '';
+      showError('Something went wrong. Please restart the app');
     }
   }
 

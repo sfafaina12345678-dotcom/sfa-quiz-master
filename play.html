@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="//libtl.com/sdk.js" data-zone="11059500" data-sdk="show_11059500"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Play Quiz</title>
 <style>
   body { font-family: Arial; background:#1a1a2e; color:white; padding:15px; }
@@ -12,7 +13,7 @@
   .quiz-box { background:#16213e; padding:20px; border-radius:15px; display:none; }
   .option { display:block; width:100%; margin:8px 0; padding:12px; border:none; border-radius:8px; background:#0f3460; color:white; font-size:16px; cursor:pointer; }
   .timer { color:orange; font-weight:bold; text-align:center; }
-  #errorBox { color:red; text-align:center; padding:20px; }
+  #errorBox { color:red; text-align:center; padding:20px; font-size:16px; }
 </style>
 </head>
 <body>
@@ -20,8 +21,7 @@
 <h2>🧠 Quiz Zone <span style="float:right">💰 <span id="coins">0</span></span></h2>
 <div id="lockMsg" class="timer"></div>
 <div id="errorBox"></div>
-
-<div id="questionList"></div>
+<div id="questionList"><h3 style="text-align:center">Loading...</h3></div>
 
 <div id="quizBox" class="quiz-box">
   <h3 id="qText"></h3>
@@ -32,7 +32,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyALgsT0Hma3XzOra4egA0hHU9HEToRSg",
@@ -49,8 +49,8 @@
   const db = getFirestore(app);
   
   let tg = window.Telegram.WebApp;
-  if (tg) tg.ready();
-  if (tg) tg.expand();
+  tg.ready();
+  tg.expand();
   
   let userRef = null;
   let userCoins = 0;
@@ -145,50 +145,43 @@
       document.getElementById('quizBox').style.display = 'none';
       document.getElementById('questionList').style.display = 'block';
       showQuestions();
-    } catch (error) {
-      alert('Error: ' + error.message);
+    } catch (err) {
+      alert('Error: ' + err.message);
     }
   }
 
   async function init() {
+    // STEP 1: Check Telegram User - ZAROORI HAI
+    const user = tg.initDataUnsafe?.user;
+    if (!user) {
+      document.getElementById('errorBox').innerHTML = "❌ Bot se open karo. <br>Browser me nahi chalega.";
+      document.getElementById('questionList').innerHTML = '';
+      return;
+    }
+    
     try {
-      const user = tg.initDataUnsafe?.user;
-      
-      if (!user) {
-        document.getElementById('errorBox').innerHTML = "Telegram se open karo. Bot me /start dabao.";
-        return;
-      }
-      
+      // STEP 2: Firebase se user load karo
       userRef = doc(db, "users", user.id.toString());
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          coins: 100,
-          first_name: user.first_name || "User",
-          username: user.username || "",
-          created: new Date()
-        });
-        userCoins = 100;
-      } else {
-        userCoins = userSnap.data().coins || 0;
+        document.getElementById('errorBox').innerHTML = "❌ User nahi mila.<br>Pehle Home Page / Start button dabao.";
+        document.getElementById('questionList').innerHTML = '';
+        return;
       }
       
+      userCoins = userSnap.data().coins || 0;
       document.getElementById('coins').innerText = userCoins;
       showQuestions();
       
-    } catch (error) {
-      console.error(error);
-      document.getElementById('errorBox').innerHTML = `Error: ${error.message}<br>Rules check karo ya pehle index.html kholo.`;
+    } catch (err) {
+      document.getElementById('errorBox').innerHTML = 'Firebase Error: ' + err.message;
+      document.getElementById('questionList').innerHTML = '';
     }
   }
 
   setInterval(checkGlobalLock, 1000);
-  
-  // Page load hote hi init chala de
-  (async () => {
-    await init();
-  })();
+  init();
 
 </script>
 </body>

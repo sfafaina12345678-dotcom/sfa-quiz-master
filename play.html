@@ -7,17 +7,19 @@
 <title>Play Quiz</title>
 <style>
   body { font-family: Arial; background:#1a1a2e; color:white; padding:15px; }
-  .q-btn { display:block; width:100%; margin:10px 0; padding:15px; font-size:18px; border:none; border-radius:8px; background:#0f3460; color:white; }
-  .locked { background:#444; opacity:0.6; }
+  .q-btn { display:block; width:100%; margin:10px 0; padding:15px; font-size:18px; border:none; border-radius:8px; background:#0f3460; color:white; cursor:pointer; }
+  .locked { background:#444; opacity:0.6; cursor:not-allowed; }
   .quiz-box { background:#16213e; padding:20px; border-radius:15px; display:none; }
-  .option { display:block; width:100%; margin:8px 0; padding:12px; border:none; border-radius:8px; background:#0f3460; color:white; font-size:16px; }
-  .timer { color:orange; font-weight:bold; }
+  .option { display:block; width:100%; margin:8px 0; padding:12px; border:none; border-radius:8px; background:#0f3460; color:white; font-size:16px; cursor:pointer; }
+  .timer { color:orange; font-weight:bold; text-align:center; }
+  #errorBox { color:red; text-align:center; padding:20px; }
 </style>
 </head>
 <body>
 
 <h2>🧠 Quiz Zone <span style="float:right">💰 <span id="coins">0</span></span></h2>
 <div id="lockMsg" class="timer"></div>
+<div id="errorBox"></div>
 
 <div id="questionList"></div>
 
@@ -26,14 +28,12 @@
   <div id="options"></div>
 </div>
 
-<button onclick="location.href='index.html'" style="margin-top:20px; padding:10px;">⬅️ Back</button>
+<button onclick="location.href='index.html'" style="margin-top:20px; padding:10px; width:100%;">⬅️ Back</button>
 
 <script type="module">
-  // Firebase Imports
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyALgsT0Hma3XzOra4egA0hHU9HEToRSg",
     authDomain: "quiz-master-bddda.firebaseapp.com",
@@ -47,17 +47,15 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
-  // Telegram
+  
   let tg = window.Telegram.WebApp;
+  if (tg) tg.ready();
   if (tg) tg.expand();
   
-  // Global Vars
   let userRef = null;
   let userCoins = 0;
   let currentQ = null;
 
-  // 8 Questions
   const questions = [
     {id:1, q:"India ki Rajdhani?", options:["Mumbai","Delhi","Kolkata","Chennai"], ans:1},
     {id:2, q:"2+2=?", options:["3","4","5","6"], ans:1},
@@ -69,11 +67,9 @@
     {id:8, q:"National Animal?", options:["Lion","Tiger","Elephant","Peacock"], ans:1}
   ];
 
-  // LocalStorage sirf locks ke liye
   function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
   function loadData(key) { return JSON.parse(localStorage.getItem(key)) || null; }
 
-  // Check 5 min global lock
   function checkGlobalLock() {
     let lockTill = loadData('global_lock');
     if (lockTill && Date.now() < lockTill) {
@@ -85,7 +81,6 @@
     return false;
   }
 
-  // Show 8 question buttons
   function showQuestions() {
     let html = '';
     let qLocks = loadData('question_locks') || {};
@@ -96,7 +91,7 @@
       let timeLeft = isLocked ? Math.ceil((unlockTime - Date.now())/1000/3600) : 0;
       
       if (isLocked) {
-        html += `<button class="q-btn locked" id="q${q.id}">🔒 Locked ${timeLeft}h left</button>`;
+        html += `<button class="q-btn locked">🔒 Locked ${timeLeft}h left</button>`;
       } else {
         html += `<button class="q-btn" onclick="openQuiz(${q.id})">Q${q.id} Watch Ad & Play</button>`;
       }
@@ -104,12 +99,10 @@
     document.getElementById('questionList').innerHTML = html;
   }
 
-  // Ad dekhne ke baad quiz khule
   window.openQuiz = function(qid) {
     if (checkGlobalLock()) return;
     if (typeof show_11059500 === 'undefined') {
       alert('Ad load nahi ho raha. Page refresh karo ya adblock band karo.');
-      showQuestions();
       return;
     }
     
@@ -126,69 +119,76 @@
         optHtml += `<button class="option" onclick="checkAns(${i})">${o}</button>`;
       });
       document.getElementById('options').innerHTML = optHtml;
-    }).catch((e) => {
+    }).catch(() => {
       alert('Quiz unlock karne ke liye ad dekhna zaroori hai!');
       showQuestions();
     });
   }
 
-  // Answer Check - FIRESTORE WALA CHANGE YAHI HAI
   window.checkAns = async function(selected) {
-    userCoins += 10;
-    
-    // Firebase me update karo
-    await updateDoc(userRef, { coins: userCoins });
-    document.getElementById('coins').innerText = userCoins;
+    try {
+      userCoins += 10;
+      await updateDoc(userRef, { coins: userCoins });
+      document.getElementById('coins').innerText = userCoins;
 
-    if (selected === currentQ.ans) {
-      alert('✅ Sahi Jawab! +10 Coins Mile');
-    } else {
-      alert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
+      if (selected === currentQ.ans) {
+        alert('✅ Sahi Jawab! +10 Coins Mile');
+      } else {
+        alert('❌ Galat Jawab! Phir bhi +10 Coins Mile');
+      }
+
+      saveData('global_lock', Date.now() + 5*60*1000);
+      let qLocks = loadData('question_locks') || {};
+      qLocks[currentQ.id] = Date.now() + 22*60*60*1000;
+      saveData('question_locks', qLocks);
+      
+      document.getElementById('quizBox').style.display = 'none';
+      document.getElementById('questionList').style.display = 'block';
+      showQuestions();
+    } catch (error) {
+      alert('Error: ' + error.message);
     }
-
-    // 5 min ka global lock laga do
-    saveData('global_lock', Date.now() + 5*60*1000);
-    
-    // Is question ko 22 ghante ke liye lock kar do
-    let qLocks = loadData('question_locks') || {};
-    qLocks[currentQ.id] = Date.now() + 22*60*60*1000;
-    saveData('question_locks', qLocks);
-    
-    // Wapas question list pe
-    document.getElementById('quizBox').style.display = 'none';
-    document.getElementById('questionList').style.display = 'block';
-    showQuestions();
   }
 
-  // Init - User Load Karo Firebase Se
   async function init() {
-    const user = tg.initDataUnsafe?.user;
-    if (!user) {
-      document.body.innerHTML = "<h1>Please open in Telegram</h1>";
-      return;
+    try {
+      const user = tg.initDataUnsafe?.user;
+      
+      if (!user) {
+        document.getElementById('errorBox').innerHTML = "Telegram se open karo. Bot me /start dabao.";
+        return;
+      }
+      
+      userRef = doc(db, "users", user.id.toString());
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          coins: 100,
+          first_name: user.first_name || "User",
+          username: user.username || "",
+          created: new Date()
+        });
+        userCoins = 100;
+      } else {
+        userCoins = userSnap.data().coins || 0;
+      }
+      
+      document.getElementById('coins').innerText = userCoins;
+      showQuestions();
+      
+    } catch (error) {
+      console.error(error);
+      document.getElementById('errorBox').innerHTML = `Error: ${error.message}<br>Rules check karo ya pehle index.html kholo.`;
     }
-    
-    userRef = doc(db, "users", user.id.toString());
-    const userSnap = await getDoc(userRef);
-    
-    // Agar user document nahi hai to bana do
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        coins: 100,
-        first_name: user.first_name,
-        created: new Date()
-      });
-      userCoins = 100;
-    } else {
-      userCoins = userSnap.data().coins;
-    }
-    
-    document.getElementById('coins').innerText = userCoins;
-    showQuestions();
   }
 
   setInterval(checkGlobalLock, 1000);
-  init();
+  
+  // Page load hote hi init chala de
+  (async () => {
+    await init();
+  })();
 
 </script>
 </body>

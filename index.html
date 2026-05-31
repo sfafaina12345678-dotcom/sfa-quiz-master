@@ -22,59 +22,28 @@
     <button class="btn play" onclick="location.href='play.html'">🎮 PLAY</button>
     <button class="btn redeem" onclick="location.href='redeem.html'">💰 REDEEM</button>
     <script type="module">
-  // 1. Firebase import karo
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'
-  import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // 2. YAHAN TERA firebaseConfig PASTE KAR - Project Settings se copy karke
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
-    apiKey: "AIza...",
-    authDomain: "sfa-quiz-master.firebaseapp.com",
-    projectId: "sfa-quiz-master",
-    storageBucket: "sfa-quiz-master.appspot.com",
-    messagingSenderId: "123456",
-    appId: "1:123456:web:abcdef"
+    apiKey: "AIzaSyALgsT0Hma3XzOra4egdA0hhUR9HEToRsg",
+    authDomain: "quiz-master-bddda.firebaseapp.com",
+    databaseURL: "https://quiz-master-bddda-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "quiz-master-bddda",
+    storageBucket: "quiz-master-bddda.firebasestorage.app",
+    messagingSenderId: "839923899515",
+    appId: "1:839923899515:web:3bfd68db70359fd5cb16de",
+    measurementId: "G-5J1WDZ1P0S"
   };
 
-  // 3. Firebase start karo
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // 4. Telegram + Firebase ka asli code
-  async function loadUser() {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    
-    const user = tg.initDataUnsafe?.user;
-    
-    if (!user) {
-      document.getElementById('coinCount').innerText = "Open in Telegram";
-      return;
-    }
-    
-    const userId = user.id.toString(); 
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      // Naya user - Firestore me bana do
-      await setDoc(userRef, {
-        telegramId: userId,
-        firstName: user.first_name,
-        username: user.username || null,
-        coins: 100,
-        createdAt: new Date()
-      });
-      document.getElementById('coinCount').innerText = 100;
-    } else {
-      // Purana user - coins dikha do
-      const data = userSnap.data();
-      document.getElementById('coinCount').innerText = data.coins;
-    }
-  }
-
-  loadUser();
-    </script>
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
